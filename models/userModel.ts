@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Vui lòng nhập password"],
         trim: true,
-        min: [6, "Mật khẩu không được ít hơn 6 ký tự"]
+        min: [6, "Mật khẩu không được ít hơn 6 ký tự"],
     },
     role: {
         type: String,
