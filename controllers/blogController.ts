@@ -21,7 +21,75 @@ const BlogController = {
         } catch (error: any) {
             return res.status(400).json({msg: error.message})
         }
-    }
+    },
+    getHomeBlogs: async (req: Request, res: Response) => {
+        try {
+            const blogs = await Blogs.aggregate([
+                {
+                    $lookup: {
+                        from: "users",
+                        let: { user_id: "$user" },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $eq: ["$_id", "$$user_id"]
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    password: 0
+                                }
+                            }
+                        ],
+                        as: "users"
+                    }
+                },
+                { $unwind: "$users" },
+                {
+                    $lookup: {
+                        "from": "categories",
+                        localField: "category",
+                        foreignField: "_id",
+                        as: "category"
+                    }
+                },
+                { $unwind: "$category" },
+
+                // sorf
+                { $sort: { "createAt": -1 } },
+
+                //group by category 
+                {
+                    $group: {
+                        _id: "$category._id",
+                        name: { $first: "$category.name" },
+                        blog: {
+                            $push: "$$ROOT"
+                        },
+                        count: {
+                            $sum: 1
+                        }
+                    }
+                }
+            ])
+            return res.json(blogs)
+        } catch (error: any) {
+            return res.status(400).json({msg: error.message})
+        }
+    },
+
+    getBlog: async (req: Request, res: Response) => {
+        try {
+            const blog = await Blogs.findOne({_id: req.params.id})
+            if(!blog) return res.status(400).json({msg: "Không tìm thấy blog"})
+            return res.json(blog)
+        } catch (error: any) {
+            return res.status(400).json({msg: error.message})
+        }
+    },
+
 }
 
 export default BlogController

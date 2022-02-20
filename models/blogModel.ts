@@ -22,7 +22,8 @@ const blogSchema = new mongoose.Schema({
         required: true
     },
     category: {
-        type: String
+        type: mongoose.Types.ObjectId,
+        ref: 'category'
     },
     user: {
         type: mongoose.Types.ObjectId,
@@ -33,3 +34,4 @@ const blogSchema = new mongoose.Schema({
 })
 
 export default mongoose.model('blog', blogSchema)
+
