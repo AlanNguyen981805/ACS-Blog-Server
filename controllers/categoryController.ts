@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { IReqAuth } from "../configs/interfaces";
 import Categories from "../models/categoryModel"
+import { convertToSlug } from "../utils/helper";
 
 const categoryController = {
     createCategory: async(req: IReqAuth, res: Response) => {
@@ -12,7 +13,11 @@ const categoryController = {
             const category = await Categories.findOne({name})
             if(category) return res.status(400).json({msg: "Loại tin đã tồn tại"})
 
-            const newCategory = await new Categories({name})
+            let dataCate = {
+                name,
+                slug: convertToSlug(name)
+            }
+            const newCategory = await new Categories(dataCate)
             await newCategory.save()
 
             return res.json({newCategory})

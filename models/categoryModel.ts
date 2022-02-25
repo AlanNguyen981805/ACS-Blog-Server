@@ -8,6 +8,12 @@ const categorySchema = new mongoose.Schema({
         trim: true,
         unique: true,
         maxlength: [50, "Tên không được quá 50 ký tự"]
+    },
+    slug: {
+        type: String,
+        required: true,
+        trim: true,
+        unique: true
     }
 }, {
     timestamps: true

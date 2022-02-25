@@ -1,5 +1,7 @@
 import { Request, Response } from "express"
+import Mongoose  from "mongoose"
 import { IReqAuth } from "../configs/interfaces"
+import categoryModel from "../models/categoryModel"
 import { convertToSlug } from "../utils/helper"
 import Blogs from "./../models/blogModel"
 
@@ -60,13 +62,14 @@ const BlogController = {
                 { $unwind: "$category" },
 
                 // sorf
-                { $sort: { "createdAt": -1 } },
+                { $sort: { createdAt: -1 } },
 
                 //group by category 
                 {
                     $group: {
                         _id: "$category._id",
                         name: { $first: "$category.name" },
+                        slug: { $first: "$category.slug"},
                         blog: {
                             $push: "$$ROOT"
                         },
@@ -91,6 +94,67 @@ const BlogController = {
             return res.status(400).json({msg: error.message})
         }
     },
+
+    getBlogByCategory: async(req: Request, res: Response) => {
+        const Category = await categoryModel.findOne({slug: req.params.category_id}).select("_id")
+        if(!Category) return res.status(400).json({msg: "Không tìm thấy loại tin"})
+        try {
+            const Data = await Blogs.aggregate([
+                {
+                    $facet: {
+                        totalData: [
+                            {
+                                $match: {
+                                    category: Category._id
+                                }
+                            },
+                            {
+                                $lookup: {
+                                    from: "users",
+                                    let: { user_id: "$user" },
+                                    pipeline: [
+                                        { $match: { $expr: { $eq: ["$_id", "$$user_id"] } } },
+                                        { $project: {password: 0}}
+                                    ],
+                                    as: "user"
+                                }
+                            },
+                            {
+                                $unwind: "$user"
+                            },
+                            {
+                                $sort: { createdAt: -1 }
+                            }
+                        ],
+                        totalCount: [
+                            { 
+                                $match: {
+                                    category: Category._id
+                                }
+                            },
+                            {$count: 'count'}
+                        ],
+
+                    }
+                },
+                {
+                    $project: {
+                        count: { $arrayElemAt: ["$totalCount.count", 0] },
+                        totalData: 1
+                    }
+                }
+            ])
+
+            const blogs = Data[0].totalData
+            const count = Data[0].count
+
+            return res.json({blogs, count})
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+
 
 }
 
