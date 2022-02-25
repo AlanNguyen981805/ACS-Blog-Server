@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
 import { IReqAuth } from "../configs/interfaces"
+import { convertToSlug } from "../utils/helper"
 import Blogs from "./../models/blogModel"
 
 const BlogController = {
@@ -10,6 +11,7 @@ const BlogController = {
             const newBlog = new Blogs({
                 user: req.user._id,
                 title,
+                slug: convertToSlug(title),
                 description,
                 content,
                 category,
@@ -58,7 +60,7 @@ const BlogController = {
                 { $unwind: "$category" },
 
                 // sorf
-                { $sort: { "createAt": -1 } },
+                { $sort: { "createdAt": -1 } },
 
                 //group by category 
                 {
@@ -72,7 +74,7 @@ const BlogController = {
                             $sum: 1
                         }
                     }
-                }
+                },
             ])
             return res.json(blogs)
         } catch (error: any) {
@@ -82,7 +84,7 @@ const BlogController = {
 
     getBlog: async (req: Request, res: Response) => {
         try {
-            const blog = await Blogs.findOne({_id: req.params.id})
+            const blog = await Blogs.findOne({slug: req.params.slug})
             if(!blog) return res.status(400).json({msg: "Không tìm thấy blog"})
             return res.json(blog)
         } catch (error: any) {

@@ -6,6 +6,6 @@ const router = Router()
 
 router.post('/blog', auth, BlogController.createBlog)
 router.get('/blogs', BlogController.getHomeBlogs)
-router.get('/blog/:id', BlogController.getBlog)
+router.get('/blog/:slug', BlogController.getBlog)
 
 export default router;

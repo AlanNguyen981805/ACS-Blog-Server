@@ -8,6 +8,11 @@ const blogSchema = new mongoose.Schema({
         minlength: 20,
         maxlength: 50
     },
+    slug: {
+        type: String,
+        trim: true,
+        required: true,
+    },
     content: {
         type: String,
         required: true,
